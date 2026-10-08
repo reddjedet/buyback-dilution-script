@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import yfinance as yf
 
-OUT_DIR = "/ruta/outputs/"  # se puede pisar por argumento
+OUT_DIR = "/run/media/christian/51cc8d45-50ef-4ae6-8f35-ecd9286e0c67/Documentos/Proyectos Antigravity/buyback-dillution/outputs/"  # se puede pisar por argumento
 DEFAULT_TICKERS = [
     "AAPL",
     "AMZN",
@@ -114,7 +114,15 @@ def compute(symbol, now):
     return y
 
 
-def plot(symbol, y, path):
+def get_name(symbol):
+    try:
+        i = yf.Ticker(symbol).info
+        return i.get("shortName") or i.get("longName") or ""
+    except Exception:  # noqa: BLE001
+        return ""
+
+
+def plot(symbol, y, path, name=""):
     fig, ax = plt.subplots(figsize=(11, 5.5))
     fig.set_facecolor(BG)
     ax.set_facecolor(BG)
@@ -181,13 +189,12 @@ def plot(symbol, y, path):
         fontweight="bold",
         fontsize=fs,
     )
-    t2 = ax.text(
-        0,
-        1.02,
-        "Buyback Yield / Dilution - Quarterly",
-        transform=ax.transAxes,
-        fontsize=fs,
+    title2 = (
+        f"{name} | Buyback Yield / Dilution - Quarterly"
+        if name
+        else "Buyback Yield / Dilution - Quarterly"
     )
+    t2 = ax.text(0, 1.02, title2, transform=ax.transAxes, fontsize=fs)
     fig.canvas.draw()
     r = fig.canvas.get_renderer()
     aw = ax.get_window_extent(r).width
@@ -209,7 +216,7 @@ def main():
         try:
             y = compute(sym, now)
             path = os.path.join(out_dir, f"{sym}_buyback_dilution.jpg")
-            plot(sym, y, path)
+            plot(sym, y, path, get_name(sym))
             print(f"[{sym}] guardado: {path}")
         except Exception as e:  # noqa: BLE001
             print(f"[{sym}] error: {e}")
